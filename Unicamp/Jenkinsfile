@@ -1,57 +1,20 @@
-pipeline {
-  agent any
-
-  options {
-    timestamps()
+node {
+  timestamps()
+  stage('Checkout') {
+    checkout scm
   }
-
-  environment {
-    IMAGE_NAME = 'unicamp-5-2'
-    IMAGE_TAG  = "${BUILD_NUMBER}"
+  stage('Verificar Docker no agente') {
+    sh 'docker --version'
+    sh 'docker info > /dev/null'
   }
-
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
-    }
-
-    stage('Verificar Docker no agente') {
-      steps {
-        sh 'docker --version'
-        sh 'docker info > /dev/null'
-      }
-    }
-
-    stage('Build da imagem') {
-      steps {
-        sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
-      }
-    }
-
-    stage('Executar app no container') {
-      steps {
-        script {
-          def out = sh(
-            script: 'docker run --rm ${IMAGE_NAME}:${IMAGE_TAG}',
-            returnStdout: true
-          ).trim()
-          echo "Saída do app: ${out}"
-        }
-      }
-    }
+  stage('Build da imagem') {
+    sh "docker build -t unicamp-5-2:${env.BUILD_NUMBER} ."
   }
-
-  post {
-    always {
-      sh 'docker image prune -f || true'
-    }
-    success {
-      echo '✅ Pipeline finalizado com sucesso.'
-    }
-    failure {
-      echo '❌ Falha no pipeline.'
-    }
+  stage('Executar app no container') {
+    sh "docker run --rm unicamp-5-2:${env.BUILD_NUMBER}"
+  }
+  stage('Cleanup') {
+    sh 'docker image prune -f || true'
   }
 }
+
