@@ -1,12 +1,13 @@
 FROM openjdk:11-jdk-slim
 
-WORKDIR /app/Unicamp
+WORKDIR /app
 
-# copia seu fonte
-COPY Unicamp/OlaUnicamp.java .
+# copie os fontes (caminhos RELATIVOS à pasta Unicamp/, que é o contexto)
+COPY src/main/java ./src/main/java
 
-# compila
-RUN javac OlaUnicamp.java
+# compile tudo para /app/out (inclui Main.java e OlaUnicamp.java)
+RUN mkdir -p out \
+ && javac -encoding UTF-8 -d out $(find src/main/java -name "*.java")
 
-# executa
-CMD ["java", "OlaUnicamp"]
+# execute a classe pelo nome totalmente qualificado
+CMD ["java", "-cp", "out", "org.example.OlaUnicamp"]
