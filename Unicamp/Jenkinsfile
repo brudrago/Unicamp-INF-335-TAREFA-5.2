@@ -1,0 +1,53 @@
+pipeline {
+  agent any
+
+  options {
+    timestamps()
+    ansiColor('xterm')
+  }
+
+  environment {
+    IMAGE_NAME = 'unicamp-5-2'
+    IMAGE_TAG  = "${BUILD_NUMBER}"
+  }
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    stage('Verificar Docker no agente') {
+      steps {
+        sh 'docker --version'
+        sh 'docker info > /dev/null'
+      }
+    }
+
+    stage('Build da imagem') {
+      steps {
+        sh 'docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .'
+      }
+    }
+
+    stage('Executar app no container') {
+      steps {
+        script {
+          def out = sh(
+            script: 'docker run --rm ${IMAGE_NAME}:${IMAGE_TAG}',
+            returnStdout: true
+          ).trim()
+
+          echo "Saída do app: ${out}"
+        }
+      }
+    }
+  }
+
+  post {
+    always {
+      sh 'docker image prune -f || true'
+    }
+    success {
+      echo '✅ Pipeline finaliz
