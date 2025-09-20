@@ -3,7 +3,6 @@ pipeline {
 
   options {
     timestamps()
-    ansiColor('xterm')
   }
 
   environment {
@@ -38,7 +37,6 @@ pipeline {
             script: 'docker run --rm ${IMAGE_NAME}:${IMAGE_TAG}',
             returnStdout: true
           ).trim()
-
           echo "Saída do app: ${out}"
         }
       }
